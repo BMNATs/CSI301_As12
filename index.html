@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InnovateFund Crowdfunding DApp</title>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Ethers.js v6 CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #131b2e;
+            --card-border: #23304d;
+            --accent-pink: #ec4899;
+            --accent-pink-hover: #db2777;
+            --accent-purple: #8b5cf6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Kanit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #f472b6, var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--accent-pink), var(--accent-pink-hover));
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(236, 72, 153, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669, var(--success));
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-purple {
+            background: linear-gradient(135deg, #7c3aed, var(--accent-purple));
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+        }
+
+        .wallet-badge {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #f472b6;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-box {
+            background-color: rgba(236, 72, 153, 0.1);
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            color: #fbcfe8;
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            word-break: break-all;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        input {
+            width: 100%;
+            background-color: #0b0f19;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--accent-pink);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+            background: #0b0f19;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-item.full-width {
+            grid-column: span 2;
+        }
+
+        .detail-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: rgba(236, 72, 153, 0.15);
+            color: var(--accent-pink);
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            width: fit-content;
+        }
+
+        .actions-wrapper {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 600px) {
+
+            .form-row,
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-item.full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Header / Navbar -->
+        <header>
+            <div class="logo">
+                <i class="fa-solid fa-rocket"></i> InnovateFund Crowdfunding
+            </div>
+            <button id="btnConnect" class="btn" onclick="connectWallet()">
+                <i class="fa-solid fa-wallet"></i> Connect Wallet
+            </button>
+            <div id="walletAddress" class="wallet-badge hidden">
+                <i class="fa-solid fa-circle" style="color: var(--success); font-size: 0.6rem;"></i>
+                <span id="walletAddressText"></span>
+            </div>
+        </header>
+
+        <!-- Status Message Box -->
+        <div id="statusMsg" class="status-box hidden">
+            <i class="fa-solid fa-circle-info"></i>
+            <span id="statusText"></span>
+        </div>
+
+        <!-- Section 1: สร้างโครงการระดมทุน -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fa-solid fa-folder-plus" style="color: var(--accent-pink);"></i> 1. สร้างโครงการระดมทุน
+                (Create Campaign)
+            </div>
+            <form onsubmit="handleCreateCampaign(event)">
+                <div class="form-group">
+                    <label>ชื่อโครงการ</label>
+                    <input type="text" id="campTitle" placeholder="เช่น อุปกรณ์ IoT เพื่อการเกษตรอัจฉริยะ" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>เป้าหมายเงินทุน (ETH)</label>
+                        <input type="number" step="0.001" id="campGoal" placeholder="0.005" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ระยะเวลาระดมทุน (วัน)</label>
+                        <input type="number" id="campDuration" value="7" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>จำนวนเงิน Milestone 1 (ETH)</label>
+                        <input type="number" step="0.001" id="msAmount" placeholder="0.005" required>
+                    </div>
+                    <div class="form-group">
+                        <label>รายละเอียด Milestone 1</label>
+                        <input type="text" id="msDesc" placeholder="ส่งมอบ Prototype เฟสแรก" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">
+                    <i class="fa-solid fa-paper-plane"></i> สร้างโครงการระดมทุน
+                </button>
+            </form>
+        </div>
+
+        <!-- Section 2: ติดตาม & ร่วมสนับสนุน -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fa-solid fa-chart-pie" style="color: var(--accent-purple);"></i> 2. ติดตามโครงการ &
+                สนับสนุนเงินทุน (Dashboard)
+            </div>
+            <div class="form-row" style="grid-template-columns: 1fr auto; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>ใส่ Campaign ID ที่ต้องการตรวจสอบ</label>
+                    <input type="number" id="searchCampId" placeholder="ระบุ Campaign ID">
+                </div>
+                <button onclick="handleFetchCampaign()" class="btn btn-purple" style="height: 45px;">
+                    <i class="fa-solid fa-magnifying-glass"></i> ค้นหา
+                </button>
+            </div>
+
+            <!-- Campaign Detail Display -->
+            <div id="campDetailCard" class="hidden" style="margin-top: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 id="displayTitle" style="color: var(--accent-pink);"></h3>
+                    <span id="displayStatus" class="status-badge"></span>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">ยอดระดมทุนสะสม / เป้าหมาย</span>
+                        <span class="detail-value" style="color: var(--success); font-weight: 600;"><span
+                                id="displayRaised"></span> / <span id="displayGoal"></span> ETH</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">เจ้าของโครงการ (Creator)</span>
+                        <span class="detail-value" id="displayCreator"></span>
+                    </div>
+                    <div class="detail-item full-width">
+                        <span class="detail-label">รายละเอียด Milestone 1</span>
+                        <span class="detail-value" id="displayMsDesc"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">จำนวนเงิน Milestone 1</span>
+                        <span class="detail-value" style="color: #f472b6; font-weight: 600;"><span
+                                id="displayMsAmount"></span> ETH</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">สถานะการเบิกจ่าย Milestone 1</span>
+                        <span class="detail-value" id="displayMsStatus"></span>
+                    </div>
+                </div>
+
+                <div class="actions-wrapper">
+                    <!-- ปุ่มสำหรับผู้สนับสนุน: โอน ETH ร่วมทุน -->
+                    <div id="actionContribute" class="hidden">
+                        <div class="form-group">
+                            <label>ระบุจำนวน ETH ที่ต้องการร่วมสนับสนุน:</label>
+                            <input type="number" step="0.001" id="contribAmount" placeholder="0.001">
+                        </div>
+                        <button onclick="handleContribute()" class="btn btn-success" style="width: 100%;">
+                            <i class="fa-solid fa-hand-holding-heart"></i> โอนเงินสนับสนุนโครงการ
+                        </button>
+                    </div>
+
+                    <!-- ฟอร์มเจ้าของโครงการ: ขอเบิกเงิน Milestone 1 -->
+                    <div id="actionRequestMs" class="hidden">
+                        <div class="form-group">
+                            <label>แนบลิงก์หลักฐานผลงาน (Proof Hash/URL):</label>
+                            <input type="text" id="msProofInput" placeholder="https://github.com/... หรือ IPFS Hash">
+                        </div>
+                        <button onclick="handleRequestMs()" class="btn btn-purple" style="width: 100%;">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> ยื่นขอเบิกเงิน Milestone 1
+                        </button>
+                    </div>
+
+                    <!-- ปุ่มสำหรับผู้สนับสนุน: โหวตอนุมัติเบิกเงิน -->
+                    <div id="actionApproveMs" class="hidden">
+                        <button onclick="handleApproveMs()" class="btn btn-success" style="width: 100%;">
+                            <i class="fa-solid fa-thumbs-up"></i> โหวตอนุมัติการจ่ายเงิน Milestone 1 ให้เจ้าของโครงการ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ ใส่ Contract Address ของโจทย์ 5 ตรงนี้
+        const CONTRACT_ADDRESS = "0x9A9Dd9543101b5abeFe12cC2DDa0e22C90a3E5C6";
+
+        const CONTRACT_ABI = [
+            "function createCampaign(string _title, uint256 _goalAmount, uint256 _durationDays, uint256[] _milestoneAmounts, string[] _milestoneDescs) returns (uint256)",
+            "function contribute(uint256 _campaignId) payable",
+            "function requestMilestoneRelease(uint256 _campaignId, uint256 _milestoneId, string _proofHash)",
+            "function approveMilestone(uint256 _campaignId, uint256 _milestoneId)",
+            "function refund(uint256 _campaignId)",
+            "function getCampaign(uint256 _campaignId) view returns (tuple(uint256 id, address creator, string title, uint256 goalAmount, uint256 raisedAmount, uint256 deadline, uint8 status, uint256 milestoneCount))",
+            "function getMilestone(uint256 _campaignId, uint256 _milestoneId) view returns (tuple(string description, uint256 amount, string proofHash, uint256 approvalCount, bool isRequested, bool isPaid))",
+            "function contributions(uint256, address) view returns (uint256)"
+        ];
+
+        const statusNames = ["Funding", "Funded", "Failed"];
+        let provider, signer, contract, userAddress, currentCamp, currentMs;
+
+        function showStatus(msg) {
+            const box = document.getElementById("statusMsg");
+            document.getElementById("statusText").innerText = msg;
+            box.classList.remove("hidden");
+        }
+
+        async function connectWallet() {
+            if (!window.ethereum) return alert("กรุณาติดตั้ง MetaMask ครับ");
+            try {
+                provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner();
+                userAddress = await signer.getAddress();
+                contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+                document.getElementById("btnConnect").classList.add("hidden");
+                document.getElementById("walletAddressText").innerText = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4);
+                document.getElementById("walletAddress").classList.remove("hidden");
+                showStatus("เชื่อมต่อ Wallet สำเร็จแล้ว!");
+            } catch (err) {
+                showStatus("เชื่อมต่อไม่สำเร็จ: " + err.message);
+            }
+        }
+
+        // 1. สร้างโครงการระดมทุน
+        async function handleCreateCampaign(e) {
+            e.preventDefault();
+            if (!contract) return alert("กรุณาเชื่อมต่อ Wallet ก่อนครับ");
+            try {
+                showStatus("กำลังสร้างโครงการระดมทุน...");
+                const title = document.getElementById("campTitle").value;
+                const goalWei = ethers.parseEther(document.getElementById("campGoal").value);
+                const duration = document.getElementById("campDuration").value;
+                const msWei = ethers.parseEther(document.getElementById("msAmount").value);
+                const msDesc = document.getElementById("msDesc").value;
+
+                const tx = await contract.createCampaign(title, goalWei, duration, [msWei], [msDesc]);
+                await tx.wait();
+                showStatus(`สร้างโครงการสำเร็จ! (Tx Hash: ${tx.hash})`);
+            } catch (err) {
+                showStatus("เกิดข้อผิดพลาด: " + err.message);
+            }
+        }
+
+        // 2. ดึงข้อมูลและจัดการ Dashboard
+        async function handleFetchCampaign() {
+            if (!contract) return alert("กรุณาเชื่อมต่อ Wallet ก่อนครับ");
+            const campId = document.getElementById("searchCampId").value;
+            if (campId === "") return;
+
+            try {
+                const camp = await contract.getCampaign(campId);
+                const ms = await contract.getMilestone(campId, 0);
+                const userContribWei = await contract.contributions(campId, userAddress);
+
+                currentCamp = {
+                    id: campId,
+                    creator: camp.creator,
+                    title: camp.title,
+                    goalEth: ethers.formatEther(camp.goalAmount),
+                    raisedEth: ethers.formatEther(camp.raisedAmount),
+                    statusStr: statusNames[camp.status]
+                };
+
+                currentMs = {
+                    desc: ms.description,
+                    amountEth: ethers.formatEther(ms.amount),
+                    proofHash: ms.proofHash,
+                    isRequested: ms.isRequested,
+                    isPaid: ms.isPaid
+                };
+
+                document.getElementById("displayTitle").innerText = currentCamp.title;
+                document.getElementById("displayStatus").innerText = currentCamp.statusStr;
+                document.getElementById("displayGoal").innerText = currentCamp.goalEth;
+                document.getElementById("displayRaised").innerText = currentCamp.raisedEth;
+                document.getElementById("displayCreator").innerText = currentCamp.creator;
+                document.getElementById("displayMsDesc").innerText = currentMs.desc;
+                document.getElementById("displayMsAmount").innerText = currentMs.amountEth;
+
+                let msStatusText = "ยังไม่ยื่นขอเบิก";
+                if (currentMs.isPaid) msStatusText = "โอนเงินเรียบร้อยแล้ว";
+                else if (currentMs.isRequested) msStatusText = `ยื่นขอเบิกแล้ว (หลักฐาน: ${currentMs.proofHash})`;
+                document.getElementById("displayMsStatus").innerText = msStatusText;
+
+                // ซ่อน Action ทั้งหมดก่อน
+                document.getElementById("actionContribute").classList.add("hidden");
+                document.getElementById("actionRequestMs").classList.add("hidden");
+                document.getElementById("actionApproveMs").classList.add("hidden");
+
+                const isCreator = userAddress.toLowerCase() === currentCamp.creator.toLowerCase();
+                const isContributor = userContribWei > 0n;
+
+                if (currentCamp.statusStr === "Funding") {
+                    document.getElementById("actionContribute").classList.remove("hidden");
+                } else if (currentCamp.statusStr === "Funded") {
+                    if (isCreator && !currentMs.isRequested && !currentMs.isPaid) {
+                        document.getElementById("actionRequestMs").classList.remove("hidden");
+                    } else if (isContributor && currentMs.isRequested && !currentMs.isPaid) {
+                        document.getElementById("actionApproveMs").classList.remove("hidden");
+                    }
+                }
+
+                document.getElementById("campDetailCard").classList.remove("hidden");
+                showStatus("ดึงข้อมูลโครงการสำเร็จ");
+            } catch (err) {
+                showStatus("ไม่พบ Campaign ID นี้ หรือเกิดข้อผิดพลาด");
+            }
+        }
+
+        // 3. ร่วมสนับสนุนเงินทุน (Contribute)
+        async function handleContribute() {
+            const amount = document.getElementById("contribAmount").value;
+            if (!amount) return alert("กรุณาระบุจำนวนเงิน ETH ครับ");
+            try {
+                showStatus("กำลังโอนเงินสนับสนุนโครงการ...");
+                const tx = await contract.contribute(currentCamp.id, {
+                    value: ethers.parseEther(amount)
+                });
+                await tx.wait();
+                showStatus("สนับสนุนโครงการเรียบร้อย!");
+                handleFetchCampaign();
+            } catch (err) {
+                showStatus("เกิดข้อผิดพลาด: " + err.message);
+            }
+        }
+
+        // 4. ขอเบิกเงิน Milestone (Request Release)
+        async function handleRequestMs() {
+            const proof = document.getElementById("msProofInput").value;
+            if (!proof) return alert("กรุณากรอกหลักฐานผลงานครับ");
+            try {
+                showStatus("กำลังยื่นขอเบิกเงิน Milestone...");
+                const tx = await contract.requestMilestoneRelease(currentCamp.id, 0, proof);
+                await tx.wait();
+                showStatus("ยื่นขอเบิกเงินสำเร็จ!");
+                handleFetchCampaign();
+            } catch (err) {
+                showStatus("เกิดข้อผิดพลาด: " + err.message);
+            }
+        }
+
+        // 5. โหวตอนุมัติจ่ายเงิน Milestone (Approve Milestone)
+        async function handleApproveMs() {
+            try {
+                showStatus("กำลังลงคะแนนอนุมัติจ่ายเงิน...");
+                const tx = await contract.approveMilestone(currentCamp.id, 0);
+                await tx.wait();
+                showStatus("อนุมัติและสั่งจ่ายเงิน Milestone ให้เจ้าของโครงการเรียบร้อยแล้ว!");
+                handleFetchCampaign();
+            } catch (err) {
+                showStatus("เกิดข้อผิดพลาด: " + err.message);
+            }
+        }
+    </script>
+</body>
+
+</html>
